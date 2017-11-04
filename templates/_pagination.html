@@ -1,0 +1,46 @@
+<section class="section">
+    <div class="container">
+        <nav class="pagination" role="navigation" aria-label="pagination">
+            <ul class="pagination-list">
+                {% if pages.first.num != pages.cur.num %}
+                    <li>
+                        <p class="is-size-7">הדף הראשון</p>
+                        <a class="pagination-link" href="{{pages.first.url}}">
+                            {{pages.first.title}}
+                        </a>
+                    </li>
+                    <li>
+                        <span class="pagination-ellipsis">&hellip;</span>
+                    </li>
+                {% endif %}
+                {% if pages.prev and pages.prev.num != pages.first.num %}
+                    <li>
+                        <p class="is-size-7">הדף הקודם</p>
+                        <a class="pagination-link" href="{{pages.prev.url}}">{{pages.prev.title}}</a>
+                    </li>
+                {% endif %}
+                <li>
+                    <p class="is-size-7">הדף הנוכחי
+                    {% if pages.first.num == pages.cur.num %} (הראשון){% endif%}
+                    {% if pages.last.num == pages.cur.num %} (האחרון){% endif%}</p>
+                    <a class="pagination-link is-current" href="{{pages.cur.url}}">{{pages.cur.title}}</a>
+                </li>
+                {% if pages.next and pages.next.num != pages.last.num %}
+                    <li>
+                        <p class="is-size-7">הדף הבא</p>
+                        <a class="pagination-link" href="{{pages.next.url}}">{{pages.next.title}}</a>
+                    </li>
+                {% endif %}
+                {% if pages.last.num != pages.cur.num %}
+                    <li>
+                        <span class="pagination-ellipsis">&hellip;</span>
+                    </li>
+                    <li>
+                        <p class="is-size-7">הדף האחרון</p>
+                        <a class="pagination-link" href="{{pages.last.url}}">{{pages.last.title}}</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</section>

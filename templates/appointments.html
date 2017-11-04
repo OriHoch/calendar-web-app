@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{index_title}}</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.6.0/css/bulma.min.css">
+    <link rel="stylesheet" href="main.css">
+</head>
+<body dir="rtl">
+<section class="hero is-primary is-bold">
+    <div class="hero-body">
+        <div class="container">
+            <h1 class="title">{{index_title_html}}</h1>
+            <h2 class="subtitle">{% include '_index_subtitle.html' %}</h2>
+        </div>
+    </div>
+</section>
+{% if pages.first.num != pages.cur.num %}
+    {% include "_pagination.html" %}
+{% endif %}
+<section class="section appointments-section">
+    <div class="container">
+        {% for date in dates %}
+            <div class="box">
+                <!--<h3 class="is-size-2 appointments-date-title">{{ date.date.strftime("%d/%m/%Y") }}</h3>-->
+                {% for appointment in date.appointments %}
+                    <div class="box appointments-bg{{appointment.bg}}">
+                        <div class="columns">
+                            <div class="column is-3">
+                                <div class="columns">
+                                    <div class="column box">
+                                        <p class="is-size-3 has-text-centered">{{ appointment.date.strftime("%d") }}</p>
+                                        <p class="is-size-6 has-text-centered">{{ appointment.month_heb }}, {{ appointment.date.strftime("%Y") }}</p>
+                                    </div>
+                                    <div class="column box">
+                                        <p class="is-size-4 has-text-centered">
+                                            {% if appointment.when %}{{appointment.when}}{% else %}לא ידוע{% endif %}
+                                        </p>
+                                        <p class="is-size-5 has-text-centered">
+                                            {% if appointment.duration %}{{appointment.duration}}{% else %}&nbsp;{% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column is-7 content has-text-right">
+                                {% if appointment.who or appointment.subject %}
+                                    <p class="is-size-3">
+                                        {% if appointment.who %}
+                                            {{appointment.who}}
+                                            {% if appointment.subject %} - {{appointment.subject}}{% endif %}
+                                        {% else %}
+                                            {{appointment.subject}}
+                                        {% endif %}
+                                    </p>
+                                {% endif %}
+                                {% if appointment.where %}
+                                    <p class="is-size-5">
+                                        {{appointment.where}}
+                                    </p>
+                                {% endif %}
+                            </div>
+                            <div class="column is-2">
+                                <p class="is-bold is-size-7">מקור:
+                                    <a href="{{appointment.source_link}}" target="_blank">{{appointment.source}}</a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+</section>
+{% include "_pagination.html" %}
+</body>
+</html>

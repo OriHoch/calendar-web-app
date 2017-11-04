@@ -1,0 +1,56 @@
+download:
+  pipeline:
+  - run: add_resource
+    parameters:
+      name: sheet-1
+      url: https://docs.google.com/spreadsheets/d/1KgITIvsJubAKaNgvsiDR4mbN4p7hd2Jsjeo0yAoROiU/gviz/tq?tqx=out:csv&sheet=Sheet1
+  - run: stream_remote_resources
+  - run: set_types
+    parameters:
+      resources: sheet-1
+      types: {
+        "תאריך": {
+          "_name": "date",
+          "type": "date",
+          "format": "%d/%m/%Y"
+        },
+        "עם מי הפגישה": {
+          "_name": "who",
+          "type": "string"
+        },
+        "מקום": {
+          "_name": "where",
+          "type": "string"
+        },
+        "שעה": {
+          "_name": "when",
+          "type": "string"
+        },
+        "אורך הפגישה": {
+          "_name": "duration",
+          "type": "string"
+        },
+        "נושא הפגישה": {
+          "_name": "subject",
+          "type": "string"
+        },
+        "מקור": {
+          "_name": "source",
+          "type": "string"
+        }
+      }
+  - run: normalize_data
+  - run: dump.to_path
+
+build:
+  pipeline:
+  - run: load_resource
+    parameters:
+      url: ./datapackage.json
+      resource: .*
+  - run: build
+    parameters:
+      appointments-per-page: 10
+      context:
+        index_title: יומן ראש הממשלה
+        index_title_html: יומן ראש הממשלה
