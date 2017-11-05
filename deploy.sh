@@ -17,7 +17,7 @@ TEMPDIR=`mktemp -d`
     error "Failed to clone from https://github.com/${GITHUB_REPO_SLUG}.git" && exit 1
 
 rm -rf "${TEMPDIR}/dist"
-cp dist "${TEMPDIR}/"
+cp -r dist "${TEMPDIR}/"
 
 pushd "${TEMPDIR}/dist" >/dev/null
     if ! git diff --exit-code .; then
