@@ -102,3 +102,4 @@ ENV/
 
 .dpp.db
 .idea
+.env
