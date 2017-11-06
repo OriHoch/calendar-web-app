@@ -3,14 +3,40 @@ Static HTML web app that allows to show calendar appointments from verstaile inp
 
 ## Prerequisites
 
+* Linux
 * Docker
+* System Python 2.7
+
+## Installation
+
+Pull the docker image and try to interactively install if some dependencies are missing.
+
+```
+./upv.sh --pull --interactive
+```
 
 ## Usage
 
-Start a local dev server, watch and rebuild on changes
-* `./upv.sh . start`
-* Site should be accessible at http://localhost:8000/
+```
+./upv.sh start
+```
 
-Re-download the source data
-* Source data is committed to Git, you should run this if you want to update it:
-  * `./upv.sh . dpp "run ./download"
+This runs the build pipeline, watches and rebuilds on changes
+
+Site should be accessible at http://localhost:8000/
+
+### Running the download pipeline
+
+To download fresh data or in case you made changes to the download pipeline:
+
+```
+./upv.sh download
+```
+
+## Deployment
+
+`data/`, `dist/` and `datapackage.json` are committed to Git, site is served from `dist/` directory on GitHub pages
+
+Travis is used to download, build and commit on push to master.
+
+Site is available at http://orihoch.uumpa.com/calendar-web-app/dist/

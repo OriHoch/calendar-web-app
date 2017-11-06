@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-source upv/functions.sh
+source "${UPV_ROOT}/functions.sh"
+source "${UPV_WORKSPACE}/functions.sh"
 
 source_dotenv
 
@@ -33,8 +34,8 @@ if [ "${GIT_CONFIG_USER}" == "" ] || [ "${GIT_CONFIG_EMAIL}" == "" ]; then
 fi
 
 if [ "${GITHUB_PUSH_BRANCH}" == "" ]; then
-    info "Please input the branch name dist changes should be committed to"
-    info "This will usually be the master branch"
+    info "Please input the default branch name"
+    info "This will usually be 'master'"
     ! read_params GITHUB_PUSH_BRANCH && exit 1
 fi
 

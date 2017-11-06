@@ -1,0 +1,20 @@
+aliases:
+  dpp: pipenv run dpp
+
+  # download all remote data, commits to GitHub in data/ directory
+  # runs on every push to master by travis
+  download: upv dpp "run ./download"
+
+  # build the web-app (static html files)
+  # runs on every push to master by travis
+  build: upv upv/static-files-build build
+
+  # start development server + watch + (re)build
+  start: upv upv/static-files-build start
+
+  # start a local web server for dist/ directory
+  serve: upv upv/static-files-build serve
+
+  # deployment - based on travis and github pages
+  deploy: upv upv/github-travis-static-deployment deploy
+  provision:  upv upv/github-travis-static-deployment provision

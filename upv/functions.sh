@@ -20,6 +20,12 @@ success() {
     echo_trim "${1}"
 }
 
+upv_get_exec_alias() {
+    local ALIAS="${1}"
+    local UPV_YAML_FILE="${UPV_WORKSPACE}/upv.yaml"
+    python -c 'import yaml,json;print(yaml.load(open("'${UPV_YAML_FILE}'")).get("aliases",{}).get("'${ALIAS}'",""))'
+}
+
 upv() {
     # this can be used instead of ./upv.sh to run code inside an upv module
     # this could be the current module, or sub-modules as long as they share the same Dockerfile
@@ -28,12 +34,27 @@ upv() {
     local CMD="${2}"
     local PARAMS="${3}"
     debug "upv"
-    debug `dumpenv SUBMODULE_PATH UPV_WORKSPACE`
+    debug `dumpenv SUBMODULE_PATH UPV_WORKSPACE CMD PARAMS`
+    local EXEC_ALIAS=`upv_get_exec_alias "${SUBMODULE_PATH}"`
+    if [ "${EXEC_ALIAS}" != "" ]; then
+        debug `dumpenv EXEC_ALIAS`
+        eval "${EXEC_ALIAS} ${CMD}"
+        return $?
+    fi
     pushd "${UPV_WORKSPACE}/${SUBMODULE_PATH}" >/dev/null
         upv_exec "${CMD}" "${PARAMS}"
         RES=$?
     popd >/dev/null
     return $RES
+}
+
+upv_start_bash() {
+    local UPV_MODULE_PATH="${1}"
+    if [ "${UPV_MODULE_PATH}" != "" ]; then
+        cd "${UPV_WORKSPACE}/${UPV_MODULE_PATH}"
+    fi
+    UPV_BASH="${UPV_BASH:-bash}"
+    $UPV_BASH
 }
 
 upv_exec() {
@@ -57,7 +78,8 @@ upv_exec() {
             $CMD $PARAMS
         fi
     else
-        bash
+        debug "upv_start_bash from upv_exec"
+        upv_start_bash "${UPV_MODULE_PATH}"
     fi
 }
 
@@ -68,7 +90,7 @@ bash_on_error() {
     if [ "${UPV_DEBUG}" == "1" ] && [ "${UPV_INTERACTIVE}" == "1" ]; then
         dumpenv UPV_DEBUG UPV_INTERACTIVE
         echo "Starting bash on error"
-        bash
+        upv_start_bash .
     fi
 }
 
@@ -215,6 +237,18 @@ dumpenv_secret() {
         printf "${PARAM}=\"${VALUE}\" "
     done
     echo
+}
+
+docker_clean_github_build() {
+    local GITHUB_REPO="${1}"
+    local GITHUB_BRANCH="${2}"
+    local DOCKER_TAG="${3}"
+    local DOCKER_FILE="${4}"
+    local DOCKER_DIR="${5}"
+    TEMPDIR=`mktemp -d`
+    git clone --branch "${GITHUB_BRANCH}" "https://github.com/${GITHUB_REPO}.git" "${TEMPDIR}"
+    echo "docker build -t \"${DOCKER_TAG}\" -f \"${DOCKER_FILE}\" \"${TEMPDIR}/${DOCKER_DIR}\""
+    docker build -t "${DOCKER_TAG}" -f "${TEMPDIR}/${DOCKER_FILE}" "${TEMPDIR}/${DOCKER_DIR}"
 }
 
 docker_build() {

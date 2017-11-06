@@ -31,8 +31,24 @@ upv_sh_preflight() {
     "
 }
 
+upv_sh_handle_pull() {
+    if [ "${1}" == "--pull" ] || [ "${2}" == "--pull" ]; then
+        if [ "${1}" == "--interactive" ] || [ "${2}" == "--interactive" ]; then
+            export UPV_INTERACTIVE=1
+        else
+            export UPV_INTERACTIVE=0
+        fi
+        upv_pull
+        ! upv_sh_preflight && error "Failed preflight checks"
+        return 0
+    else
+        return 1
+    fi
+}
+
 upv_sh_help() {
     echo "Usage: ${0} [--debug] [--interactive] <UPV_MODULE_PATH> [CMD] [PARAMS]"
+    echo "* For initial installation, run: ${0} --pull --interactive"
     return 0
 }
 
@@ -53,14 +69,17 @@ upv_sh_read_params() {
         export UPV_MODULE_PATH="${3}"
         export CMD="${4}"
         export PARAMS="${5}"
+        [ "${6}" != "" ] && error "Additional params are not allowed" && return 1
     elif [ "${1}" == "--interactive" ] || [ "${1}" == "--debug" ]; then
         export UPV_MODULE_PATH="${2}"
         export CMD="${3}"
         export PARAMS="${4}"
+        [ "${5}" != "" ] && error "Additional params are not allowed" && return 1
     else
         export UPV_MODULE_PATH="${1}"
         export CMD="${2}"
         export PARAMS="${3}"
+        [ "${4}" != "" ] && error "Additional params are not allowed" && return 1
     fi
     return 0
 }
@@ -138,5 +157,7 @@ upv_sh_start() {
     fi
     debug "Removing image"
     docker rmi --no-prune "${DOCKER_TAG}" >/dev/null 2>&1
+    debug "Restoring file owner and group to ${USER}:${GROUP}"
+    sudo chown -R $USER:$GROUP `pwd`
     return 0
 }
