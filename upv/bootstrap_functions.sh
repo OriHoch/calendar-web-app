@@ -88,7 +88,7 @@ docker_build_upv() {
     local UPV_DOCKER_PATH="${1}"
     local UPV_DOCKER_FILE="${2:-Dockerfile}"
     local UPV_DOCKER_TAG="${3:-upv-`uuidgen`}"
-    local CMD="docker build -t ${UPV_DOCKER_TAG} -f ${UPV_DOCKER_FILE} ${UPV_DOCKER_PATH}"
+    local CMD="docker build `docker_build_upv_params` -t ${UPV_DOCKER_TAG} -f ${UPV_DOCKER_FILE} ${UPV_DOCKER_PATH}"
     BUILD_LOG_FILE=`mktemp`
     debug `dumpenv BUILD_LOG_FILE CMD` >/dev/stderr
     $CMD > "${BUILD_LOG_FILE}" &

@@ -64,3 +64,7 @@ upv_push() {
     docker_clean_github_build OriHoch/calendar-web-app master orihoch/calendar-web-app-upv upv.Dockerfile .
     docker push orihoch/calendar-web-app-upv
 }
+
+docker_build_upv_params() {
+    echo "--cache-from orihoch/calendar-web-app-upv"
+}
