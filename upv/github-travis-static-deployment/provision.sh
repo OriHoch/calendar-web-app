@@ -7,7 +7,7 @@ source_dotenv
 
 ! read_params GITHUB_REPO_SLUG && exit 1
 
-dotenv_set GITHUB_REPO_SLUG "${GITHUB_REPO_SLUG}"
+dotenv_set "" GITHUB_REPO_SLUG "${GITHUB_REPO_SLUG}"
 
 [ "${UPV_INTERACTIVE}" != "1" ] &&\
     error "Only interactive provisioning is supported" && exit 1
@@ -39,10 +39,10 @@ if [ "${GITHUB_PUSH_BRANCH}" == "" ]; then
     ! read_params GITHUB_PUSH_BRANCH && exit 1
 fi
 
-dotenv_set GITHUB_TOKEN "${GITHUB_TOKEN}"
-dotenv_set GIT_CONFIG_USER "${GIT_CONFIG_USER}"
-dotenv_set GIT_CONFIG_EMAIL "${GIT_CONFIG_EMAIL}"
-dotenv_set GITHUB_PUSH_BRANCH "${GITHUB_PUSH_BRANCH}"
+dotenv_set "" GITHUB_TOKEN "${GITHUB_TOKEN}"
+dotenv_set "" GIT_CONFIG_USER "${GIT_CONFIG_USER}"
+dotenv_set "" GIT_CONFIG_EMAIL "${GIT_CONFIG_EMAIL}"
+dotenv_set "" GITHUB_PUSH_BRANCH "${GITHUB_PUSH_BRANCH}"
 
 travis env set --no-interactive --repo "${GITHUB_REPO_SLUG}" --private GITHUB_TOKEN "${GITHUB_TOKEN}"
 travis env set --no-interactive --repo "${GITHUB_REPO_SLUG}" --public GITHUB_REPO_SLUG "${GITHUB_REPO_SLUG}"

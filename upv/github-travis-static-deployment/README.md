@@ -10,6 +10,7 @@ See [here](https://developer.github.com/v3/guides/managing-deploy-keys/#machine-
 Once you have a GitHub token for a machine user, you can continue with the provision script:
 
 ```
+./upv.sh --pull
 ./upv.sh --interactive upv/github-travis-static-deployment provision
 ```
 

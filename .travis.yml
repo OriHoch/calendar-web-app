@@ -6,6 +6,6 @@ script:
 - sudo apt-get update
 - sudo apt-get -y install docker-ce
 - ./upv.sh --pull
-- ./upv.sh download
-- ./upv.sh build
-- ./upv.sh deploy
+- ./upv.sh pipenv "run dpp run ./download"
+- ./upv.sh upv/static-files-build build
+- ./upv.sh upv/github-travis-static-deployment deploy

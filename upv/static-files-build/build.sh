@@ -9,7 +9,7 @@ fi
 
 info "Building static files"
 
-! upv . static_files_build &&\
+! upv_exec . static_files_build &&\
     error "Failed static files build" && exit 1
 
 success

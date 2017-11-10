@@ -1,5 +1,12 @@
+# functions which may run on a host machine with partial dependencies
+#
+# used to bootstrap the full environment which runs inside a docker container
+#
+# should make an effort to be as compatible as possible
+
 
 preflight_check() {
+    # simple wrapper for checking a condition and attempt to install missing dependencies interactively
     local CHECK="${1}"
     local ERROR="${2}"
     local INSTALL="${3}"
@@ -22,47 +29,108 @@ preflight_check() {
 }
 
 upv_sh_preflight() {
+    # check host environment for the minimal upv bootstrapping dependencies
     preflight_check "which python2.7" "Python 2.7 is required" "sudo apt-get install python2.7" &&\
     preflight_check "which docker" "Docker is required" "
         curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -;
         sudo add-apt-repository \"deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\";
         sudo apt-get update;
         sudo apt-get -y install docker-ce;
-    "
+    " &&\
+    preflight_check "which dotenv" "System Python package dotenv is required" "sudo pip install --upgrade pip setuptools && sudo pip install python-dotenv" &&\
+    preflight_check "pip freeze | grep PyYAML" "System Python pip package pyyaml is required" "sudo pip install --upgrade pip setuptools && sudo pip install pyyaml" &&\
+    preflight_check "which jq" "Jq is required" "sudo apt-get install jq" &&\
+    preflight_check "which uuidgen" "uuid-runtime is required" "sudo apt-get install uuid-runtime"
 }
 
 upv_sh_handle_pull() {
+    # handles the functionality for ./upv.sh --pull
+    # return 0 = handled pull successfully, 1 = failed to handle pull, 2 = no need to handle pull
+    # this is used to speed up builds later using --cache-from
     if [ "${1}" == "--pull" ] || [ "${2}" == "--pull" ]; then
-        if [ "${1}" == "--interactive" ] || [ "${2}" == "--interactive" ]; then
-            export UPV_INTERACTIVE=1
-        else
-            export UPV_INTERACTIVE=0
-        fi
-        upv_pull
-        ! upv_sh_preflight && error "Failed preflight checks"
+        # look for pull-tag attribute inside upv.yaml files recursively in all sub-directories
+        for UPV_YAML_FILE in `find . -iname upv.yaml`; do
+            UPV_MODULE_DIR=`dirname $UPV_YAML_FILE`
+            UPV_MODULE_DIR="${UPV_MODULE_DIR//\.\//}"
+            debug `dumpenv UPV_YAML_FILE UPV_MODULE_DIR`
+            PULL_TAG=`yaml_get "${UPV_YAML_FILE}" "pull-tag"`
+            if [ "${PULL_TAG}" != "" ]; then
+                if docker pull "${PULL_TAG}"; then
+                    dotenv_set "${UPV_MODULE_DIR}/.env" "PULLED_TAG" "${PULL_TAG}"
+                    dotenv_set "${UPV_MODULE_DIR}/.env" "PULLED_TAG_DATE" `date +%F`
+                else
+                    dotenv_set "${UPV_MODULE_DIR}/.env" "PULLED_TAG" ""
+                    dotenv_set "${UPV_MODULE_DIR}/.env" "PULLED_TAG_DATE" ""
+                    # will fail only if UPV_STRICT=1
+                    strict_warning "Pull failed to module-dir: ${UPV_MODULE_DIR}, pull-tag: ${PULL_TAG}" && return 1
+                fi
+            fi
+        done
         return 0
     else
-        return 1
+        return 2
+    fi
+}
+
+upv_sh_handle_push() {
+    # handles the functionality for ./upv.sh --push
+    # return 0 = handled successfully, 1 = failed, 2 = skipped
+    if [ "${1}" == "--push" ] || [ "${2}" == "--push" ]; then
+        info "Building root upv image"
+        local ROOT_UPV_TAG=`upv_build_root_docker_image`; [ "${ROOT_UPV_TAG}" == "" ] && return 1
+        info `dumpenv ROOT_UPV_TAG`
+        info "Building base upv image"
+        local BASE_UPV_TAG=`upv_build_base_docker_image "${ROOT_UPV_TAG}"`; [ "${BASE_UPV_TAG}" == "" ] && return 1
+        info `dumpenv BASE_UPV_TAG`
+        for UPV_YAML_FILE in `find . -iname upv.yaml`; do
+            UPV_MODULE_DIR=`dirname $UPV_YAML_FILE`
+            UPV_MODULE_DIR="${UPV_MODULE_DIR//\.\//}"
+            info "Building upv module ${UPV_MODULE_DIR}"
+            PULL_TAG=`yaml_get "${UPV_YAML_FILE}" "pull-tag"`
+            if [ "${PULL_TAG}" != "" ]; then
+                info `dumpenv PULL_TAG`
+                local MODULE_TAG=`upv_build_module_docker_image "${ROOT_UPV_TAG}" "${BASE_UPV_TAG}" "${UPV_MODULE_DIR}"`
+                info `dumpenv MODULE_TAG`
+                [ "${MODULE_TAG}" == "" ] && error "Failed to build image" && return 1
+                ! docker tag "${MODULE_TAG}" "${PULL_TAG}" && error "Failed docker tag" && return 1
+                ! docker push "${PULL_TAG}" && error "Failed docker push" && return 1
+            fi
+        done
+        return 0
+    else
+        return 2
+    fi
+}
+
+upv_sh_handle_help() {
+    # return 0 = handled help successfully, 1 = failed to handle help, 2 = no need to handle help
+    if ! require_params UPV_MODULE_PATH; then
+        upv_sh_help
+        return 0
+    else
+        return 2
     fi
 }
 
 upv_sh_help() {
+    # default usage message when no params are passed
     echo "Usage: ${0} [--debug] [--interactive] <UPV_MODULE_PATH> [CMD] [PARAMS]"
     echo "* For initial installation, run: ${0} --pull --interactive"
     return 0
 }
 
 upv_sh_read_params() {
+    # parse upv.sh arguments and export as environment variables
     if [ "${1}" == "--debug" ] || [ "${2}" == "--debug" ]; then
         export UPV_DEBUG=1
     else
         export UPV_DEBUG=0
     fi
 
-    if [ "${1}" == "--interactive" ] || [ "${2}" == "--interactive" ]; then
-        export UPV_INTERACTIVE=1
-    else
+    if [ "${1}" == "--no-interactive" ] || [ "${2}" == "--no-interactive" ]; then
         export UPV_INTERACTIVE=0
+    else
+        export UPV_INTERACTIVE=1
     fi
 
     if [ "${2}" == "--interactive" ] || [ "${2}" == "--debug" ]; then
@@ -84,80 +152,17 @@ upv_sh_read_params() {
     return 0
 }
 
-docker_build_upv() {
-    local UPV_DOCKER_PATH="${1}"
-    local UPV_DOCKER_FILE="${2:-Dockerfile}"
-    local UPV_DOCKER_TAG="${3:-upv-`uuidgen`}"
-    local CMD="docker build `docker_build_upv_params` -t ${UPV_DOCKER_TAG} -f ${UPV_DOCKER_FILE} ${UPV_DOCKER_PATH}"
-    BUILD_LOG_FILE=`mktemp`
-    debug `dumpenv BUILD_LOG_FILE CMD` >/dev/stderr
-    $CMD > "${BUILD_LOG_FILE}" &
-    PID="$!"
-    local I="0"
-    local TAIL_PID=""
-    while ps -p "${PID}" >/dev/null; do
-        printf "." >/dev/stderr
-        sleep 1
-        local I=`expr $I + 1`
-        if [ "${I}" == "5" ]; then
-            echo >/dev/stderr
-            echo >/dev/stderr
-            info "Sorry it's taking too long, please be patient.. It will be lightlining fast on the next run!" >/dev/stderr
-            info "Tailing the build log" >/dev/stderr
-            tail -f "${BUILD_LOG_FILE}" >/dev/stderr &
-            echo >/dev/stderr
-            TAIL_PID="$!"
-        fi
-    done
-    if [ "${TAIL_PID}" != "" ]; then
-        kill -9 $TAIL_PID
-    fi
-    echo >/dev/stderr
-    echo "${UPV_DOCKER_TAG}"
-    return 0
-}
-
-upv_sh_start() {
-    printf "INFO: Starting upv"
-    [ "${UPV_DEBUG}" == "1" ] && echo
-    local UPV_DOCKER_PATH="${1}"
-    local UPV_DOCKER_FILE="${2:-Dockerfile}"
-    local UPV_DOCKER_TAG="${3}"
-    DOCKER_TAG=`docker_build_upv "${UPV_DOCKER_PATH}" "${UPV_DOCKER_FILE}" "${UPV_DOCKER_TAG}"`
-    [ "${DOCKER_TAG}" == "" ] &&\
-        error "Failed to build upv docker image" && return 1
-    debug "pwd=`pwd`"
-    debug `dumpenv UPV_MODULE_PATH CMD PARAMS UPV_DEBUG UPV_INTERACTIVE`
-    debug "Running upv image ${DOCKER_TAG}"
-    debug "docker run -it --rm --network host \
-               -v \"${UPV_HOST_WORKSPACE:-`pwd`}:/upv/workspace\" \
-               -v \"/var/run/docker.sock:/var/run/docker.sock\" \
-               -v \"${HOME}/.docker:/root/.docker\" \
-               -e \"UPV_DEBUG=${UPV_DEBUG}\" \
-               -e \"UPV_INTERACTIVE=${UPV_INTERACTIVE}\" \
-               -e \"UPV_WORKSPACE=/upv/workspace\" \
-               -e \"UPV_HOST_WORKSPACE=${UPV_HOST_WORKSPACE:-`pwd`}\" \
-               -e \"UPV_ROOT=/upv\" \
-               \"${DOCKER_TAG}\" \"${UPV_MODULE_PATH}\" \"${CMD}\" \"${PARAMS}\""
-    docker run -it --rm --network host \
-               -v "${UPV_HOST_WORKSPACE:-`pwd`}:/upv/workspace" \
-               -v "/var/run/docker.sock:/var/run/docker.sock" \
-               -v "${HOME}/.docker:/root/.docker" \
-               -e "UPV_DEBUG=${UPV_DEBUG}" \
-               -e "UPV_INTERACTIVE=${UPV_INTERACTIVE}" \
-               -e "UPV_WORKSPACE=/upv/workspace" \
-               -e "UPV_HOST_WORKSPACE=${UPV_HOST_WORKSPACE:-`pwd`}" \
-               -e "UPV_ROOT=/upv" \
-               "${DOCKER_TAG}" "${UPV_MODULE_PATH}" "${CMD}" "${PARAMS}"
-    RES=$?
-    if [ "${RES}" != "0" ]; then
-        echo "Upv exited with error code ${RES}"
-    else
-        debug "Upv exited with successful return code ${RES}"
-    fi
-    debug "Removing image"
-    docker rmi --no-prune "${DOCKER_TAG}" >/dev/null 2>&1
+upv_sh_restore_permissions() {
     debug "Restoring file owner and group to ${USER}:${GROUP}"
-    sudo chown -R $USER:$GROUP `pwd`
-    return 0
+    if [ "${UPV_INTERACTIVE}" == "1" ]; then
+        if sudo -n true; then
+            sudo chown -R $USER:$GROUP `pwd`
+        else
+            info "Sudo password is required to set ownership on files created inside the docker container"
+            sudo chown -R $USER:$GROUP `pwd`
+        fi
+    else
+        ! sudo -n chown -R $USER:$GROUP `pwd` &&\
+            warning "Failed to set ownership on files, some files might only be accessible using root"
+    fi
 }

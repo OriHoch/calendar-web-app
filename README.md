@@ -12,13 +12,13 @@ Static HTML web app that allows to show calendar appointments from verstaile inp
 Pull the docker image and try to interactively install if some dependencies are missing.
 
 ```
-./upv.sh --pull --interactive
+./upv.sh --pull
 ```
 
 ## Usage
 
 ```
-./upv.sh start
+./upv.sh . upv/static-files-build start
 ```
 
 This runs the build pipeline, watches and rebuilds on changes
@@ -30,7 +30,7 @@ Site should be accessible at http://localhost:8000/
 To download fresh data or in case you made changes to the download pipeline:
 
 ```
-./upv.sh download
+./upv.sh . pipenv "run dpp run ./download"
 ```
 
 ## Deployment

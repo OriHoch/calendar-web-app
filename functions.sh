@@ -45,7 +45,7 @@ static_files_build(){
 }
 
 static_files_watch_changes() {
-    pipenv run when-changed *.sh *.py *.yaml *.css templates/*.html -c ./upv.sh build %f
+    pipenv run when-changed *.sh *.py *.yaml *.css templates/*.html -c "${UPV_WORKSPACE}/upv.sh upv/static-files-build build %f"
 }
 
 serve_preflight() {
@@ -56,15 +56,7 @@ serve_start() {
     cd dist && pipenv run python -m http.server "$@"
 }
 
-upv_pull() {
-    docker pull orihoch/calendar-web-app-upv
-}
-
 upv_push() {
     docker_clean_github_build OriHoch/calendar-web-app master orihoch/calendar-web-app-upv upv.Dockerfile .
     docker push orihoch/calendar-web-app-upv
-}
-
-docker_build_upv_params() {
-    echo "--cache-from orihoch/calendar-web-app-upv"
 }

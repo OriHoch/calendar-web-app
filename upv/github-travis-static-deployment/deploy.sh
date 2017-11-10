@@ -26,14 +26,14 @@ fi
 ! require_params GITHUB_REPO_SLUG GITHUB_TOKEN GIT_CONFIG_USER GIT_CONFIG_EMAIL GITHUB_PUSH_BRANCH &&\
     error "Please run provision script first" && exit 1
 
-! upv . deploy_preflight_checks &&\
+! upv_exec . deploy_preflight_checks &&\
     error "Failed deployment preflight checks" && exit 1
 
 TEMPDIR=`mktemp -d`
 ! git clone --branch "${GITHUB_PUSH_BRANCH}" "https://github.com/${GITHUB_REPO_SLUG}.git" "${TEMPDIR}" &&\
     error "Failed to clone from https://github.com/${GITHUB_REPO_SLUG}.git branch ${GITHUB_PUSH_BRANCH}" && exit 1
 
-! upv . deploy_copy "${TEMPDIR}" &&\
+! upv_exec . deploy_copy "${TEMPDIR}" &&\
     error "Failed to copy deployment files" && exit 1
 
 pushd "${TEMPDIR}" >/dev/null
