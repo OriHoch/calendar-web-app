@@ -45,7 +45,7 @@ static_files_build(){
 }
 
 static_files_watch_changes() {
-    pipenv run when-changed *.sh *.py *.yaml *.css templates/*.html -c "${UPV_WORKSPACE}/upv.sh upv/static-files-build build %f"
+    pipenv run when-changed *.sh *.py *.yaml *.css templates/*.html -c "${UPV_WORKSPACE}/upv.sh upv/static-files build %f"
 }
 
 serve_preflight() {

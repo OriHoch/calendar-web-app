@@ -15,10 +15,10 @@ Pull the docker image and try to interactively install if some dependencies are 
 ./upv.sh --pull
 ```
 
-## Usage
+## Development
 
 ```
-./upv.sh . upv/static-files-build start
+./upv.sh upv/static-files start
 ```
 
 This runs the build pipeline, watches and rebuilds on changes
@@ -30,7 +30,7 @@ Site should be accessible at http://localhost:8000/
 To download fresh data or in case you made changes to the download pipeline:
 
 ```
-./upv.sh . pipenv "run dpp run ./download"
+./upv.sh . pipenv "run dpp run ./download'
 ```
 
 ## Deployment
