@@ -14,6 +14,7 @@ echo "Installing System Python dependencies"
    sudo pip install python-dotenv pyyaml) && exit 1
 
 echo "Creating .env file from travis vars"
+touch "upv/github-travis/.env"
 dotenv -f "upv/github-travis/.env" -qnever set "GITHUB_REPO_SLUG" "${GITHUB_REPO_SLUG}"
 dotenv -f "upv/github-travis/.env" -qnever set "GITHUB_MASTER_BRANCH" "${GITHUB_MASTER_BRANCH}"
 dotenv -f "upv/github-travis/.env" -qnever set "UPV_STRICT" "${UPV_STRICT}"
