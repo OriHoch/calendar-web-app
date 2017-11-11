@@ -14,7 +14,7 @@ Example .travis.yml bootstrapping the upv framework -
 language: bash
 sudo: required
 script:
-# bootstrap the minimal environment required to run upv
+# bootstrap the upv travis environment
 - upv/github-travis/upv_bootstrap_travis.sh
 # pull images to speed-up the build
 - ./upv.sh --pull
