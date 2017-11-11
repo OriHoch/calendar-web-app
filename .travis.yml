@@ -6,8 +6,10 @@ script:
 # pull images to speed-up the build
 - ./upv.sh --pull
 # download
-- ./upv.sh pipenv "run dpp run ./download"
+- ./upv.sh . pipenv "run dpp run ./download"
 # build
-- ./upv.sh upv/static-files-build build
+- ./upv.sh upv/static-files build
 # deploy
-- ./upv.sh upv/github-travis-static-deployment deploy
+- ./upv.sh upv/github-travis static-deployment/deploy
+# push updated images to Docker Hub
+- ./upv.sh upv/github-travis docker-hub/push
