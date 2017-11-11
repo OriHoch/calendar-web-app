@@ -57,7 +57,7 @@ dumpenv_secret() {
 }
 
 bash_on_error() {
-    # will open an upv bash terminal in case --debug --interactive were passed to ./upv.sh
+    # will open an upv bash terminal in case --debug was passed to ./upv.sh
     # can be used like this (from another function):
     # ! do_something && bash_on_error && return 1
     if [ "${UPV_DEBUG}" == "1" ] && [ "${UPV_INTERACTIVE}" == "1" ]; then
@@ -378,7 +378,7 @@ upv_start_docker() {
     #                   upv is intended as a build environment, so this won't be the actual deployed images configuration
     #  - /upv/workspace volume - this allows upv modules to access the shared project files
     #  - docker.sock, .docker - allows upv to start sibling docker containers and share the docker build environment
-    #  - UPV_DEBUG, UPV_INTERACTIVE - set globally based on --debug and --interactive parameters to ./upv.sh
+    #  - UPV_DEBUG, UPV_INTERACTIVE, UPV_STRICT - set globally based on environment and parameters to ./upv.sh
     #  - UPV_WORKSPACE - absolute workspace directory - hard-coded to /upv/workspace
     #  - UPV_HOST_WORKSPACE - absolute workspace directory inside the host machine - allows upv modules to start sibling containers
     #  - UPV_ROOT - absolute directory to the root upv module inside the upv workspace

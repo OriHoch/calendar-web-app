@@ -20,7 +20,7 @@ preflight_check() {
                 eval "${INSTALL}"
             fi
         else
-            info "Run ./upv.sh --interactive to let the script try installing dependencies for you"
+            info "Run in interactive mode (UPV_INTERACTIVE=0) to let the script try installing dependencies for you"
             return 1
         fi
     else
@@ -114,31 +114,21 @@ upv_sh_handle_help() {
 
 upv_sh_help() {
     # default usage message when no params are passed
-    echo "Usage: ${0} [--debug] [--interactive] <UPV_MODULE_PATH> [CMD] [PARAMS]"
-    echo "* For initial installation, run: ${0} --pull --interactive"
+    echo "Usage: ${0} [--debug] <UPV_MODULE_PATH> [CMD] [PARAMS]"
+    echo "* For initial installation, run: ${0} --pull"
     return 0
 }
 
 upv_sh_read_params() {
     # parse upv.sh arguments and export as environment variables
-    if [ "${1}" == "--debug" ] || [ "${2}" == "--debug" ]; then
+    if [ "${1}" == "--debug" ]; then
         export UPV_DEBUG=1
     else
         export UPV_DEBUG=0
     fi
-
-    if [ "${1}" == "--no-interactive" ] || [ "${2}" == "--no-interactive" ]; then
-        export UPV_INTERACTIVE=0
-    else
-        export UPV_INTERACTIVE=1
-    fi
-
-    if [ "${2}" == "--interactive" ] || [ "${2}" == "--debug" ]; then
-        export UPV_MODULE_PATH="${3}"
-        export CMD="${4}"
-        export PARAMS="${5}"
-        [ "${6}" != "" ] && error "Additional params are not allowed" && return 1
-    elif [ "${1}" == "--interactive" ] || [ "${1}" == "--debug" ]; then
+    export UPV_INTERACTIVE="${UPV_INTERACTIVE:-1}"
+    export UPV_STRICT="${UPV_STRICT:-0}"
+    if [ "${1}" == "--debug" ]; then
         export UPV_MODULE_PATH="${2}"
         export CMD="${3}"
         export PARAMS="${4}"

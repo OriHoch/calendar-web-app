@@ -1,11 +1,13 @@
 language: bash
 sudo: required
 script:
-- curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-- sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-- sudo apt-get update
-- sudo apt-get -y install docker-ce
+# bootstrap the minimal environment required to run upv
+- upv/github-travis/upv_bootstrap_travis.sh
+# pull images to speed-up the build
 - ./upv.sh --pull
+# download
 - ./upv.sh pipenv "run dpp run ./download"
+# build
 - ./upv.sh upv/static-files-build build
+# deploy
 - ./upv.sh upv/github-travis-static-deployment deploy

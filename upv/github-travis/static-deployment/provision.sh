@@ -4,7 +4,9 @@ source "${UPV_ROOT}/functions.sh"
 source "${UPV_WORKSPACE}/functions.sh"
 source "functions.sh"
 
-enable_travis
+[ "${UPV_INTERACTIVE}" != "1" ] && error "Only interactive provisioning is supported" && exit 1
+! travis_init && exit 1
+! travis_login && exit 1
 
 if [ "${GITHUB_TOKEN}" == "" ]; then
     info "We can't automate creation of GitHub machine users due to the GitHub terms of use"
@@ -26,6 +28,6 @@ travis env set --no-interactive --repo "${GITHUB_REPO_SLUG}" --private GITHUB_TO
 travis env set --no-interactive --repo "${GITHUB_REPO_SLUG}" --public GIT_CONFIG_USER "${GIT_CONFIG_USER}"
 travis env set --no-interactive --repo "${GITHUB_REPO_SLUG}" --public GIT_CONFIG_EMAIL "${GIT_CONFIG_EMAIL}"
 
-success "Provisionining complete, you can now run deploy script locally (based on .env file) or on Travis-CI (based on travis env)"
+success "Provisioned static deployment"
 
 exit 0

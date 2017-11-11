@@ -3,7 +3,7 @@
 source "${UPV_ROOT}/functions.sh"
 source "${UPV_WORKSPACE}/functions.sh"
 
-source_dotenv
+! source_dotenv && exit 1
 
 deploy() {
     info "Starting github travis static deployment"

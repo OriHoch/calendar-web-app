@@ -3,7 +3,7 @@
 source "${UPV_ROOT}/functions.sh"
 source "${UPV_WORKSPACE}/functions.sh"
 
-source_dotenv
+! source_dotenv && exit 1
 
 if [ "${TRAVIS}" == "true" ]; then
     if [ "${TRAVIS_PULL_REQUEST}" == "false" ] &&\

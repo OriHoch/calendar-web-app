@@ -4,7 +4,9 @@ source "${UPV_ROOT}/functions.sh"
 source "${UPV_WORKSPACE}/functions.sh"
 source "functions.sh"
 
-enable_travis
+[ "${UPV_INTERACTIVE}" != "1" ] && error "Only interactive provisioning is supported" && exit 1
+! travis_init && exit 1
+! travis_login && exit 1
 
 info "Please input your docker username and password"
 info "They will be stored as travis secured environment variables and used by deploy script"
@@ -15,6 +17,6 @@ read -s -p "Docker Hub Password: "
 echo
 travis env set --no-interactive --repo "${GITHUB_REPO_SLUG}" --private DOCKER_HUB_PASS "${REPLY}"
 
-success "Provisionining complete, you can now run push script on Travis-CI (based on travis env)"
+success "Provisioned Docker Hub"
 
 exit 0
