@@ -15,6 +15,7 @@ echo "Installing System Python dependencies"
 
 echo "Creating .env file from travis vars"
 touch "upv/github-travis/.env"
+(
 dotenv -f "upv/github-travis/.env" -qnever set "GITHUB_REPO_SLUG" "${GITHUB_REPO_SLUG}"
 dotenv -f "upv/github-travis/.env" -qnever set "GITHUB_MASTER_BRANCH" "${GITHUB_MASTER_BRANCH}"
 dotenv -f "upv/github-travis/.env" -qnever set "UPV_STRICT" "${UPV_STRICT}"
@@ -24,5 +25,6 @@ dotenv -f "upv/github-travis/.env" -qnever set "DOCKER_HUB_PASS" "${DOCKER_HUB_P
 dotenv -f "upv/github-travis/.env" -qnever set "GITHUB_TOKEN" "${GITHUB_TOKEN}"
 dotenv -f "upv/github-travis/.env" -qnever set "GIT_CONFIG_USER" "${GIT_CONFIG_USER}"
 dotenv -f "upv/github-travis/.env" -qnever set "GIT_CONFIG_EMAIL" "${GIT_CONFIG_EMAIL}"
+) >/dev/null
 
 exit 0

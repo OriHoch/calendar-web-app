@@ -76,25 +76,32 @@ upv_sh_handle_push() {
     # handles the functionality for ./upv.sh --push
     # return 0 = handled successfully, 1 = failed, 2 = skipped
     if [ "${1}" == "--push" ] || [ "${2}" == "--push" ]; then
-        info "Building root upv image"
         local ROOT_UPV_TAG=`upv_build_root_docker_image`; [ "${ROOT_UPV_TAG}" == "" ] && return 1
         info `dumpenv ROOT_UPV_TAG`
-        info "Building base upv image"
         local BASE_UPV_TAG=`upv_build_base_docker_image "${ROOT_UPV_TAG}"`; [ "${BASE_UPV_TAG}" == "" ] && return 1
         info `dumpenv BASE_UPV_TAG`
+        echo
+        local PUSH_TAGS=""
         for UPV_YAML_FILE in `find . -iname upv.yaml`; do
             UPV_MODULE_DIR=`dirname $UPV_YAML_FILE`
             UPV_MODULE_DIR="${UPV_MODULE_DIR//\.\//}"
-            info "Building upv module ${UPV_MODULE_DIR}"
-            PULL_TAG=`yaml_get "${UPV_YAML_FILE}" "pull-tag"`
-            if [ "${PULL_TAG}" != "" ]; then
-                info `dumpenv PULL_TAG`
+            info `dumpenv UPV_MODULE_DIR`
+            PUSH_TAG=`yaml_get "${UPV_YAML_FILE}" "push-tag"`
+            if [ "${PUSH_TAG}" != "" ]; then
+                info `dumpenv PUSH_TAG`
                 local MODULE_TAG=`upv_build_module_docker_image "${ROOT_UPV_TAG}" "${BASE_UPV_TAG}" "${UPV_MODULE_DIR}"`
                 info `dumpenv MODULE_TAG`
                 [ "${MODULE_TAG}" == "" ] && error "Failed to build image" && return 1
-                ! docker tag "${MODULE_TAG}" "${PULL_TAG}" && error "Failed docker tag" && return 1
-                ! docker push "${PULL_TAG}" && error "Failed docker push" && return 1
+                ! docker tag "${MODULE_TAG}" "${PUSH_TAG}" && error "Failed docker tag" && return 1
+                PUSH_TAGS+=" ${PUSH_TAG}"
             fi
+            echo
+        done
+        info "Pushing (you may break here and use the locally tagged images)..."
+        echo
+        for PUSH_TAG in $PUSH_TAGS; do
+            ! docker push "${PUSH_TAG}" && error "Failed docker push ${PUSH_TAG}" && return 1
+            echo
         done
         return 0
     else

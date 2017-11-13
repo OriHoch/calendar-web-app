@@ -353,7 +353,7 @@ upv_build_module_docker_image() {
     elif [ "${MODULE_PATH}" == "upv" ]; then
         echo "${ROOT_UPV_TAG}"
     else
-        local MODULE_TAG=`upv_build_docker "${MODULE_PATH}" "--build-arg BASE_UPV_TAG=${BASE_UPV_TAG} --build-arg ROOT_UPV_TAG=${ROOT_UPV_TAG}"`
+        local MODULE_TAG=`upv_build_docker "${MODULE_PATH}" "--build-arg BASE_UPV_TAG=${BASE_UPV_TAG}"`
         [ "${MODULE_TAG}" == "" ] && error "Failed to build module upv docker image" >/dev/stderr && return 1
         echo "${MODULE_TAG}"
         return 0
